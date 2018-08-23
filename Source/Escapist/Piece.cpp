@@ -11,24 +11,31 @@
 // Sets default values
 APiece::APiece()
 {
-
-	AutoPossessPlayer = EAutoReceiveInput::Player0;
-	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-	UCameraComponent* OurCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
-
-	UE_LOG(LogTemp, Warning, TEXT("Is collision enabled for this piece: %d"), RootComponent->IsCollisionEnabled());
-	OurVisibleComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("OurVisibleComponent"));
+	//removing for debugging
+	//AutoPossessPlayer = EAutoReceiveInput::Player0;
+	
 	ConstructorHelpers::FObjectFinderOptional<UStaticMesh> PlaneMesh(TEXT("/Game/Puzzle/Meshes/PuzzleCube.PuzzleCube"));
-	OurVisibleComponent->SetStaticMesh(PlaneMesh.Get());
+	ConstructorHelpers::FObjectFinderOptional<UMaterialInstance> OrangeMaterialOpt(TEXT("/Game/Puzzle/Meshes/OrangeMaterial.OrangeMaterial"));
 	OrangeMat = BlueMaterial.Get();
 	ClayBrick = ClayBrickMaterial.Get();
-	OurVisibleComponent->SetRelativeScale3D(FVector(1.f, 1.f, 0.25f));
-	OurCamera->SetupAttachment(RootComponent);
+
+	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+	DummyRoot = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	RootComponent = DummyRoot;
+
+	//UCameraComponent* OurCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
+	//UE_LOG(LogTemp, Warning, TEXT("Is collision enabled for this piece: %d"), RootComponent->IsCollisionEnabled());
+	
+	OurVisibleComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("OurVisibleComponent"));
+	OurVisibleComponent->SetStaticMesh(PlaneMesh.Get());
+	OurVisibleComponent->SetRelativeScale3D(FVector(1.f, 1.f, 1.f));
+	OurVisibleComponent->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
+	OurVisibleComponent->SetMaterial(0, OrangeMaterialOpt.Get());
+	OurVisibleComponent->SetupAttachment(DummyRoot);
+	//OurCamera->SetupAttachment(RootComponent);
 	//OurCamera->SetRelativeLocation(FVector(-250.0f, 0.0f, 250.0f));
 	//OurCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
-	OurVisibleComponent->SetupAttachment(RootComponent);
 }
 
 void APiece::Init(int x, int y) {

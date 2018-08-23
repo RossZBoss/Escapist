@@ -9,5 +9,5 @@ const FString WorldMapConstants::PIECE_USER = "PIECE_USER";
 const FString WorldMapConstants::END_OF_ROW = "END_OF_ROW";
 const float WorldMapConstants::BLOCK_SPACING_X = 200.f;
 const float WorldMapConstants::BLOCK_SPACING_Y = 175.f;
-const float WorldMapConstants::BLOCK_PIECE_SPACING_Z = 50.f;
+const float WorldMapConstants::BLOCK_PIECE_SPACING_Z = 330.0f;
 

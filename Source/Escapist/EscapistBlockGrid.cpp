@@ -83,7 +83,8 @@ void AEscapistBlockGrid::buildBoard(TArray<FString> gameMap) {
 		}
 		else if (blockOrPiece.Compare(WorldMapConstants::PIECE_USER) == 0)
 		{
-
+			spwanBlockDefault(rowNumber, blockIndexInRow, zigzag);
+			spwanPieceUser(rowNumber, blockIndexInRow, zigzag);
 		}
 		if (blockOrPiece.Compare(WorldMapConstants::END_OF_ROW) == 0)
 		{
@@ -123,8 +124,17 @@ void AEscapistBlockGrid::spwanBlockObstacle(int rowNumber, int blockIndexInRow, 
 	}
 }
 
-void AEscapistBlockGrid::spwanPieceUser() {
+void AEscapistBlockGrid::spwanPieceUser(int rowNumber, int blockIndexInRow, float zigzag) {
+	//set default spwan location (getActorLocation will add to x/y/z coords to center the blocks on the map.
+	const FVector PawnLocation = FVector(
+		((rowNumber * WorldMapConstants::BLOCK_SPACING_X) + zigzag),
+		(blockIndexInRow * WorldMapConstants::BLOCK_SPACING_Y), WorldMapConstants::BLOCK_PIECE_SPACING_Z) + GetActorLocation();
+	// Spawn pawn on location
+	APiece* Pawn = GetWorld()->SpawnActor<APiece>(PawnLocation, FRotator(0, 0, 0));
 
+	if (Pawn != nullptr) {
+		Pawn->OwningGrid = this;
+	}
 }
 
 MoveResult AEscapistBlockGrid::MovePiece(AEscapistBlock* block) {

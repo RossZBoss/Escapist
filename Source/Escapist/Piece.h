@@ -15,6 +15,14 @@ class ESCAPIST_API APiece : public APawn
 {
 	GENERATED_BODY()
 
+	/** Dummy root component */
+	UPROPERTY(Category = Block, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class USceneComponent* DummyRoot;
+
+	/** StaticMesh component for the clickable block */
+	UPROPERTY(Category = Block, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UStaticMeshComponent* BlockMesh;
+
 public:
 	// Sets default values for this pawn's properties
 	APiece();
@@ -29,11 +37,7 @@ public:
 	int Y = 0;
 	int LastX = 0;
 	int LastY = 0;
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
 
-public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -44,4 +48,13 @@ public:
 		UStaticMeshComponent* OurVisibleComponent;
 
 	std::vector<FVector> GetAllMoveCoordinatesToPostion(AMove* move);
+
+	/** Grid that owns us */
+	UPROPERTY()
+	class AEscapistBlockGrid* OwningGrid;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+	
 };

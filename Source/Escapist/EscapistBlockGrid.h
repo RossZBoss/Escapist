@@ -43,7 +43,7 @@ private:
 
 	void spwanBlockObstacle(int rowNumber, int blockIndexInRow, float zigzag);
 
-	void spwanPieceUser();
+	void spwanPieceUser(int rowNumber, int blockIndexInRow, float zigzag);
 
 	//TODO this can be removed
 	void SpawnActor(std::string character, int x, int y);
