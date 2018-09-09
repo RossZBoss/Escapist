@@ -27,5 +27,4 @@ public:
 	AMove reverse();
 
 	~AMove();
-
 };

@@ -97,29 +97,35 @@ void AEscapistBlock::OnFingerPressedBlock(ETouchIndex::Type FingerIndex, UPrimit
 
 void AEscapistBlock::HandleClicked()
 {
-	//Sean Added
-	//OwningGrid->MovePiece(this);
+	FString locX = TCHAR_TO_UTF8(to_string(location.getX()).c_str());
+	FString locY = TCHAR_TO_UTF8(to_string(location.getY()).c_str());
+	GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red, locX);
+	GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red, locY);
 
 	// Check we are not already active
-	if (!bIsActive && !obstacleBlockType)
+	if (!obstacleBlockType && isValidMove)
 	{
-		bIsActive = true;
-
 		// Change material
-		BlockMesh->SetMaterial(0, OrangeMaterial);
+		//BlockMesh->SetMaterial(0, OrangeMaterial);
 
-		// Tell the Grid
+
+		// Tell the Grid to add to score! removed visual atm.
 		if (OwningGrid != nullptr)
 		{
+			OwningGrid->MovePiece(this);
 			OwningGrid->AddScore();
 		}
 	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red, TEXT("Cant move here!"));
+	}
 }
 
-void AEscapistBlock::Highlight(bool bOn)
+void AEscapistBlock::SetValidMove(bool bOn)
 {
 	// Do not highlight if the block has already been activated.
-	if (bIsActive)
+	if (obstacleBlockType)
 	{
 		return;
 	}
@@ -127,14 +133,11 @@ void AEscapistBlock::Highlight(bool bOn)
 	if (bOn)
 	{
 		BlockMesh->SetMaterial(0, BaseMaterial);
+		isValidMove = true;
 	}
 	else
 	{
 		BlockMesh->SetMaterial(0, BlueMaterial);
+		isValidMove = false;
 	}
-}
-
-//Sean added
-void AEscapistBlock::Init(int x, int y) {
-	RootComponent->SetRelativeLocation(FVector(x * 250, y * 250, 0.f));
 }

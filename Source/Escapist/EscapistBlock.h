@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Point.h"
 #include "EscapistBlock.generated.h"
 
 /** A block that can be clicked */
@@ -12,6 +13,7 @@ class AEscapistBlock : public AActor
 {
 	GENERATED_BODY()
 
+private:
 	/** Dummy root component */
 	UPROPERTY(Category = Block, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class USceneComponent* DummyRoot;
@@ -20,19 +22,10 @@ class AEscapistBlock : public AActor
 	UPROPERTY(Category = Block, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* BlockMesh;	
 
-public:
-	bool obstacleBlockType = false;
-
-	AEscapistBlock();
-
-	//Sean Added
-	AEscapistBlock(FString& baseMaterial);
-
-	//Sean Added
-	void Init(int x, int y);
-
-	/** Are we currently active? */
-	bool bIsActive;
+	/** Returns DummyRoot subobject **/
+	FORCEINLINE class USceneComponent* GetDummyRoot() const { return DummyRoot; }
+	/** Returns BlockMesh subobject **/
+	FORCEINLINE class UStaticMeshComponent* GetBlockMesh() const { return BlockMesh; }
 
 	/** Pointer to white material used on the focused block */
 	UPROPERTY()
@@ -46,9 +39,22 @@ public:
 	UPROPERTY()
 	class UMaterialInstance* OrangeMaterial;
 
+public:
+	Point location;
+
 	/** Grid that owns us */
 	UPROPERTY()
 	class AEscapistBlockGrid* OwningGrid;
+
+	bool obstacleBlockType = false;
+
+	/** can we move to this block? */
+	bool isValidMove;
+
+	AEscapistBlock();
+
+	//Sean Added
+	AEscapistBlock(FString& baseMaterial);
 
 	/** Handle the block being clicked */
 	UFUNCTION()
@@ -60,13 +66,7 @@ public:
 
 	void HandleClicked();
 
-	void Highlight(bool bOn);
-
-public:
-	/** Returns DummyRoot subobject **/
-	FORCEINLINE class USceneComponent* GetDummyRoot() const { return DummyRoot; }
-	/** Returns BlockMesh subobject **/
-	FORCEINLINE class UStaticMeshComponent* GetBlockMesh() const { return BlockMesh; }
+	void SetValidMove(bool bOn);
 };
 
 

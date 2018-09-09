@@ -2,22 +2,26 @@
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "EscapistBlockGrid.h"
 #include <iostream>
 #include <sstream>
-
+#include "Engine/World.h"
+#include <EngineGlobals.h>
+#include <Runtime/Engine/Classes/Engine/Engine.h>
 #include "Engine/StaticMesh.h"
 
 
 // Sets default values
 APiece::APiece()
 {
-	//removing for debugging
-	//AutoPossessPlayer = EAutoReceiveInput::Player0;
-	
 	ConstructorHelpers::FObjectFinderOptional<UStaticMesh> PlaneMesh(TEXT("/Game/Puzzle/Meshes/PuzzleCube.PuzzleCube"));
+	ConstructorHelpers::FObjectFinderOptional<UMaterialInstance> ClayBrickMaterial = (TEXT("/Game/Puzzle/Meshes/BlueMaterial.BlueMaterial"));
 	ConstructorHelpers::FObjectFinderOptional<UMaterialInstance> OrangeMaterialOpt(TEXT("/Game/Puzzle/Meshes/OrangeMaterial.OrangeMaterial"));
+	ConstructorHelpers::FObjectFinderOptional<UMaterialInstance> BlueMaterial = (TEXT("/Game/Puzzle/Meshes/BlueMaterial.BlueMaterial"));
+	ConstructorHelpers::FObjectFinderOptional<UMaterialInstance> RedMaterialOpt(TEXT("/Game/Puzzle/Meshes/RedMaterial.RedMaterial"));
 	OrangeMat = BlueMaterial.Get();
 	ClayBrick = ClayBrickMaterial.Get();
+	RedMaterial = RedMaterialOpt.Get();
 
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -33,55 +37,11 @@ APiece::APiece()
 	OurVisibleComponent->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
 	OurVisibleComponent->SetMaterial(0, OrangeMaterialOpt.Get());
 	OurVisibleComponent->SetupAttachment(DummyRoot);
+	//OurVisibleComponent->OnClicked.AddDynamic(this, &APiece::BlockClicked);
+	//OurVisibleComponent->OnInputTouchBegin.AddDynamic(this, &APiece::OnFingerPressedBlock);
 	//OurCamera->SetupAttachment(RootComponent);
 	//OurCamera->SetRelativeLocation(FVector(-250.0f, 0.0f, 250.0f));
 	//OurCamera->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
-}
-
-void APiece::Init(int x, int y) {
-
-	X = x;
-	Y = y;
-	OurVisibleComponent->SetRelativeLocation(FVector(x * 250, y * 250, 0.f));
-	// Attach our camera and visible object to our root component. Offset and rotate the camera.
-	OurVisibleComponent->SetMaterial(0, OrangeMat);
-
-	//OurVisibleComponent->GetComponentLocation().at(0) << ", " << OurVisibleComponent->GetComponentLocation()[1] << ", " << OurVisibleComponent->GetComponentLocation()[2];
-	UE_LOG(LogTemp, Warning, TEXT("PieceActor location is: %s"), *(GetActorLocation().ToString()));//+ " is:" +
-
-	UE_LOG(LogTemp, Warning, TEXT("Visible component location is: %s"), *(OurVisibleComponent->GetComponentLocation().ToString()));//+ " is:" +
-
-};
-
-std::vector<FVector> APiece::GetAllMoveCoordinatesToPostion(AMove* move) {
-	std::vector<FVector> returnPoints;
-
-	// figure out direction to position
-
-	//
-
-	switch (move->getDirection()) {
-	case Direction::Up:
-		//	returnPoints = getAllPointsOnPath(move, 0, -1);
-		break;
-	case Direction::UpLeft:
-		//	returnPoints = getAllPointsOnPath(move, 0, -1);
-		break;
-	case Direction::UpRight:
-		//	returnPoints = getAllPointsOnPath(move, 0, -1);
-		break;
-	case Direction::Down:
-		//	returnPoints = getAllPointsOnPath(move, 0, 1);
-		break;
-	case Direction::DownLeft:
-		//	returnPoints = getAllPointsOnPath(move, -1, 0);
-		break;
-	case Direction::DownRight:
-		//	returnPoints = getAllPointsOnPath(move, 1, 0);
-		break;
-	}
-
-	return returnPoints;
 }
 
 
@@ -89,7 +49,6 @@ std::vector<FVector> APiece::GetAllMoveCoordinatesToPostion(AMove* move) {
 void APiece::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 // Called every frame
@@ -98,10 +57,27 @@ void APiece::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-// Called to bind functionality to input
-void APiece::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void APiece::setAiMaterial()
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	UE_LOG(LogTemp, Warning, TEXT("Setup Player Input"));
+	OurVisibleComponent->SetMaterial(0, RedMaterial);
+}
 
+//######################################
+//THESE ARE ONLY USABLE BY USER_PIECE'S
+//######################################
+void APiece::BlockClicked(UPrimitiveComponent* ClickedComp, FKey ButtonClicked)
+{
+	HandleClicked();
+}
+
+
+void APiece::OnFingerPressedBlock(ETouchIndex::Type FingerIndex, UPrimitiveComponent* TouchedComponent)
+{
+	HandleClicked();
+}
+
+void APiece::HandleClicked()
+{
+	OwningGrid->validateMovePiece(this);
+	GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red, TEXT("you clicked the piece"));
 }

@@ -9,6 +9,7 @@
 */
 enum class ESCAPIST_API MoveResult
 {
+	//AI stuff
 	AiPieceTaken,
 	UserPieceTaken,
 	InvalidMove,

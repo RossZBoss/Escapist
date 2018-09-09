@@ -8,10 +8,12 @@ AMove::AMove(Direction direction, int distance) {
 }
 
 int AMove::getScore() {
+	//something to do with AI
 	return _score;
 }
 
 void AMove::setScore(int score) {
+	//something to do with AI
 	_score = score;
 }
 

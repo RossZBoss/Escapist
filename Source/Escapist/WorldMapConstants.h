@@ -15,6 +15,7 @@ public:
 	static const FString BLOCK_OBSTACLE;
 	static const FString BLOCK_EMPTY;
 	static const FString PIECE_USER;
+	static const FString PIECE_AI;
 	static const FString END_OF_ROW;
 	static const float BLOCK_SPACING_X;
 	static const float BLOCK_SPACING_Y;
