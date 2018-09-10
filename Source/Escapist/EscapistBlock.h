@@ -41,6 +41,8 @@ private:
 
 public:
 	Point location;
+	//default height of blocks, we will use this to calculator move distance!
+	int height = 0;
 
 	/** Grid that owns us */
 	UPROPERTY()

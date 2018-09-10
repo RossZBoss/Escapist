@@ -80,9 +80,14 @@ void AEscapistBlockGrid::buildBoard(TArray<FString> gameMap) {
 		{
 			insertIntoBlockGrid(spwanBlockObstacle(rowNumber, blockIndexInRow, zigzag), rowNumber);
 		}
+		else if (blockOrPiece.Compare(WorldMapConstants::BLOCK_HILL) == 0)
+		{
+			insertIntoBlockGrid(spwanBlockHill(rowNumber, blockIndexInRow, zigzag), rowNumber);
+		}
 		else if (blockOrPiece.Compare(WorldMapConstants::BLOCK_EMPTY) == 0)
 		{
-			//Do nothing
+			//Do nothing, currently empty blocks wont work in our implementation. 
+			//i need to figure out a way to represent an empty space in our 2d array that wont throw nullpointers everywhere
 		}
 		else if (blockOrPiece.Compare(WorldMapConstants::PIECE_USER) == 0)
 		{
@@ -128,6 +133,23 @@ AEscapistBlock* AEscapistBlockGrid::spwanBlockDefault(int rowNumber, int blockIn
 	{
 		NewBlock->OwningGrid = this;
 		NewBlock->location = Point(rowNumber, blockIndexInRow);
+	}
+	return NewBlock;
+}
+
+AEscapistBlock* AEscapistBlockGrid::spwanBlockHill(int rowNumber, int blockIndexInRow, float zigzag) {
+	//set default spwan location (getActorLocation will add to x/y/z coords to center the blocks on the map.
+	const FVector BlockLocation = FVector(
+		((rowNumber * WorldMapConstants::BLOCK_SPACING_X) + zigzag),
+		(blockIndexInRow * WorldMapConstants::BLOCK_SPACING_Y), 150.0f) + GetActorLocation();
+	// Spawn block on location
+	AEscapistBlock* NewBlock = GetWorld()->SpawnActor<AEscapistBlock>(BlockLocation, FRotator(0, 0, 0));
+	if (NewBlock != nullptr)
+	{
+		NewBlock->OwningGrid = this;
+		NewBlock->location = Point(rowNumber, blockIndexInRow);
+		//costs +1 to move here, wont cost +1 to leave, jumping down is fast, climbing is slow.
+		NewBlock->height = 1;
 	}
 	return NewBlock;
 }

@@ -50,6 +50,8 @@ private:
 
 	AEscapistBlock* spwanBlockDefault(int rowNumber, int blockIndexInRow, float zigzag);
 
+	AEscapistBlock* spwanBlockHill(int rowNumber, int blockIndexInRow, float zigzag);
+
 	AObstacleBlock* spwanBlockObstacle(int rowNumber, int blockIndexInRow, float zigzag);
 
 	void insertIntoBlockGrid(AEscapistBlock* block, int rowNumber);

@@ -13,6 +13,7 @@ public:
 
 	static const FString BLOCK_DEFAULT;
 	static const FString BLOCK_OBSTACLE;
+	static const FString BLOCK_HILL;
 	static const FString BLOCK_EMPTY;
 	static const FString PIECE_USER;
 	static const FString PIECE_AI;
