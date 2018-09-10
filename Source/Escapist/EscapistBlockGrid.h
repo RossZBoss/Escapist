@@ -15,7 +15,6 @@
 #include "EscapistBlock.h"
 #include "Point.h"
 #include "MoveValidation.h"
-#include "Move.h"
 #include "MoveResult.h"
 #include "EscapistBlockGrid.generated.h"
 

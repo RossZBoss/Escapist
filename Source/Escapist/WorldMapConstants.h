@@ -10,7 +10,6 @@
 class ESCAPIST_API WorldMapConstants
 {
 public:
-
 	static const FString BLOCK_DEFAULT;
 	static const FString BLOCK_OBSTACLE;
 	static const FString BLOCK_HILL;

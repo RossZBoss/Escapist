@@ -22,6 +22,8 @@ public:
 
 	Point add(Point p);
 
+	bool equals(Point p);
+
 	std::string toString();
 
 	~Point();

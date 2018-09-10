@@ -28,6 +28,11 @@ Point Point::add(Point p)
 	return Point(resultX, resultY);
 }
 
+bool Point::equals(Point p)
+{
+	return (x == p.getX() && y == p.getY());
+}
+
 std::string Point::toString() {
 	std::ostringstream oss;
 	oss << "(" << getX() << "," << getY() << ")";

@@ -7,7 +7,6 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInstance.h"
 #include <vector>
-#include "Move.h"
 #include "Point.h"
 #include "Piece.generated.h"
 

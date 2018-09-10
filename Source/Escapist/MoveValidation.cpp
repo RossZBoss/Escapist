@@ -3,25 +3,25 @@
 #include "MoveValidation.h"
 #include "EscapistBlock.h"
 #include "Piece.h"
+#include "Direction.h"
 #include "User_Piece.h"
+
+using namespace std;
 
 MoveValidation::MoveValidation()
 {
 	//TOP
-	moveCalculator.push_back(Point(1, 0));
+	moveCalculator.push_back(Direction::moveTop);
 	//TOP LEFT
-	moveCalculator.push_back(Point(0, -1));
+	moveCalculator.push_back(Direction::moveTopLeft);
 	//TOP RIGHT
-	moveCalculator.push_back(Point(0, 1));
+	moveCalculator.push_back(Direction::moveTopRight);
 	//BOTTOM
-	moveCalculator.push_back(Point(-1, 0));
+	moveCalculator.push_back(Direction::moveBottom);
 	//BOTTOM LEFT
-	moveCalculator.push_back(Point(-1, -1));
+	moveCalculator.push_back(Direction::moveBottomLeft);
 	//BOTTOM RIGHT
-	moveCalculator.push_back(Point(-1, 1));
-
-	//OFFSET
-	offset = Point(1, 0);
+	moveCalculator.push_back(Direction::moveBottomRight);
 }
 
 void MoveValidation::SetValidMoves(APiece* piece, vector<vector<AEscapistBlock*>>* blockGrid)
@@ -46,7 +46,7 @@ vector<Point> MoveValidation::buildValidMoveset()
 			Point result = p.add(PieceLocation);
 			if (PieceLocation.getY() % 2 > 0 && PieceLocation.getY() != result.getY())
 			{
-				result = result.add(offset);
+				result = result.add(Direction::moveOffset);
 			}
 			validMoveset.push_back(result);
 		}
@@ -68,4 +68,24 @@ void MoveValidation::notifyBlocksOfValidMove(vector<Point> validMoveset)
 			}
 		}
 	}
+}
+
+vector<Point> MoveValidation::getShortestPathBetweenTwoPoints(vector<vector<AEscapistBlock*>>* blockGrid, Point startPoint, Point destination)
+{
+	//we can easily convert this to return a set of blocks instead of a set of points.
+	//this will be used for the AI so wasn't sure what was the better option.
+
+	//TODO: Current implementation is ignoring obstacle blocks and hills. will be added later.
+	/*
+	Point currentPoint = Point(startPoint.getX, startPoint.getY());
+	vector<Point> shortestPath;
+	while (!currentPoint.equals(destination))
+	{
+		Point result = p.add(PieceLocation);
+		if (PieceLocation.getY() % 2 > 0 && PieceLocation.getY() != result.getY())
+		{
+			result = result.add(Direction::moveOffset);
+		}
+	}*/
+	return {};
 }

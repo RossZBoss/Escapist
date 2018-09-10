@@ -7,6 +7,7 @@
 #include "EscapistBlock.h"
 #include <vector>
 
+using namespace std;
 /**
  * 
  */
@@ -16,10 +17,8 @@ private:
 	//CALCULATING MOVESET
 	vector<Point> moveCalculator;
 
-	Point offset;
-
 	//PIECE DATA
-	std::vector<vector<AEscapistBlock*>>* MoveGrid;
+	vector<vector<AEscapistBlock*>>* MoveGrid;
 	int MoveDistance;
 	Point PieceLocation;
 
@@ -30,4 +29,6 @@ public:
 	MoveValidation();
 
 	void SetValidMoves(APiece* piece, vector<vector<AEscapistBlock*>>* blockGrid);
+
+	vector<Point> getShortestPathBetweenTwoPoints(vector<vector<AEscapistBlock*>>* blockGrid, Point startPoint, Point destination);
 };
