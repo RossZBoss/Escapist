@@ -4,6 +4,9 @@
 
 AEscapistGameMode::AEscapistGameMode()
 {
+	//TODO look more into this gameMode!!
+
+
 	// no pawn by default
 	//DefaultPawnClass = AEscapistPawn::StaticClass();
 	// use our own player controller class

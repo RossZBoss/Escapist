@@ -5,6 +5,12 @@
 #include "Direction.h"
 #include "ObstacleBlock.h"
 #include <vector>
+#include <list>
+#include <string>
+#include "User_Piece.h"
+#include "EscapistBlock.h"
+#include "Point.h"
+#include "MoveValidation.h"
 #include "WorldMapConstants.h"
 #include "FileHelper.h"
 #include "Components/TextRenderComponent.h"
@@ -16,8 +22,6 @@
 
 AEscapistBlockGrid::AEscapistBlockGrid()
 {
-	// Set defaults
-	Size = 6;
 	defaultSetupGivenByUnreal();
 }
 
@@ -36,9 +40,8 @@ void AEscapistBlockGrid::defaultSetupGivenByUnreal()
 void AEscapistBlockGrid::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	moveValidation = MoveValidation::MoveValidation();
 	TArray<FString> gameMap = getArrayFromFile();
-
 	buildBoard(gameMap);
 }
 
@@ -72,20 +75,32 @@ void AEscapistBlockGrid::buildBoard(TArray<FString> gameMap) {
 		}
 		if (blockOrPiece.Compare(WorldMapConstants::BLOCK_DEFAULT) == 0)
 		{
-			spwanBlockDefault(rowNumber, blockIndexInRow, zigzag);
+			insertIntoBlockGrid(spwanBlockDefault(rowNumber, blockIndexInRow, zigzag), rowNumber);
 		}
 		else if (blockOrPiece.Compare(WorldMapConstants::BLOCK_OBSTACLE) == 0)
 		{
-			spwanBlockObstacle(rowNumber, blockIndexInRow, zigzag);
+			insertIntoBlockGrid(spwanBlockObstacle(rowNumber, blockIndexInRow, zigzag), rowNumber);
+		}
+		else if (blockOrPiece.Compare(WorldMapConstants::BLOCK_HILL) == 0)
+		{
+			insertIntoBlockGrid(spwanBlockHill(rowNumber, blockIndexInRow, zigzag), rowNumber);
 		}
 		else if (blockOrPiece.Compare(WorldMapConstants::BLOCK_EMPTY) == 0)
 		{
-			//Do nothing
+			//Do nothing, currently empty blocks wont work in our implementation. 
+			//i need to figure out a way to represent an empty space in our 2d array that wont throw nullpointers everywhere
 		}
 		else if (blockOrPiece.Compare(WorldMapConstants::PIECE_USER) == 0)
 		{
-			spwanBlockDefault(rowNumber, blockIndexInRow, zigzag);
-			spwanPieceUser(rowNumber, blockIndexInRow, zigzag);
+			AEscapistBlock* block = spwanBlockDefault(rowNumber, blockIndexInRow, zigzag);
+			insertIntoBlockGrid(block, rowNumber);
+			insertUserPiece(spwanPieceUser(block));
+		}
+		else if (blockOrPiece.Compare(WorldMapConstants::PIECE_AI) == 0)
+		{
+			AEscapistBlock* block = spwanBlockDefault(rowNumber, blockIndexInRow, zigzag);
+			insertIntoBlockGrid(block, rowNumber);
+			insertAiPiece(spwanPieceAi(block));
 		}
 		if (blockOrPiece.Compare(WorldMapConstants::END_OF_ROW) == 0)
 		{
@@ -97,9 +112,18 @@ void AEscapistBlockGrid::buildBoard(TArray<FString> gameMap) {
 			blockIndexInRow++;
 		}
 	}
+	//TODO remove general output when it stops spazzing out.
+	FString outputSize = std::to_string(blockGrid.size()).c_str();
+	FString outputRow1 = std::to_string(blockGrid[0].size()).c_str();
+	FString outputRow2 = std::to_string(blockGrid[1].size()).c_str();
+	FString outputRow3 = std::to_string(blockGrid[2].size()).c_str();
+	GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red, outputSize);
+	GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red, outputRow1);
+	GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red, outputRow2);
+	GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red, outputRow3);
 }
 
-void AEscapistBlockGrid::spwanBlockDefault(int rowNumber, int blockIndexInRow, float zigzag) {
+AEscapistBlock* AEscapistBlockGrid::spwanBlockDefault(int rowNumber, int blockIndexInRow, float zigzag) {
 	//set default spwan location (getActorLocation will add to x/y/z coords to center the blocks on the map.
 	const FVector BlockLocation = FVector(
 		((rowNumber * WorldMapConstants::BLOCK_SPACING_X) + zigzag),
@@ -109,10 +133,29 @@ void AEscapistBlockGrid::spwanBlockDefault(int rowNumber, int blockIndexInRow, f
 	if (NewBlock != nullptr)
 	{
 		NewBlock->OwningGrid = this;
+		NewBlock->location = Point(rowNumber, blockIndexInRow);
 	}
+	return NewBlock;
 }
 
-void AEscapistBlockGrid::spwanBlockObstacle(int rowNumber, int blockIndexInRow, float zigzag) {
+AEscapistBlock* AEscapistBlockGrid::spwanBlockHill(int rowNumber, int blockIndexInRow, float zigzag) {
+	//set default spwan location (getActorLocation will add to x/y/z coords to center the blocks on the map.
+	const FVector BlockLocation = FVector(
+		((rowNumber * WorldMapConstants::BLOCK_SPACING_X) + zigzag),
+		(blockIndexInRow * WorldMapConstants::BLOCK_SPACING_Y), 150.0f) + GetActorLocation();
+	// Spawn block on location
+	AEscapistBlock* NewBlock = GetWorld()->SpawnActor<AEscapistBlock>(BlockLocation, FRotator(0, 0, 0));
+	if (NewBlock != nullptr)
+	{
+		NewBlock->OwningGrid = this;
+		NewBlock->location = Point(rowNumber, blockIndexInRow);
+		//costs +1 to move here, wont cost +1 to leave, jumping down is fast, climbing is slow.
+		NewBlock->height = 1;
+	}
+	return NewBlock;
+}
+
+AObstacleBlock* AEscapistBlockGrid::spwanBlockObstacle(int rowNumber, int blockIndexInRow, float zigzag) {
 	//set default spwan location (getActorLocation will add to x/y/z coords to center the blocks on the map.
 	const FVector BlockLocation = FVector(
 		((rowNumber * WorldMapConstants::BLOCK_SPACING_X) + zigzag),
@@ -122,84 +165,95 @@ void AEscapistBlockGrid::spwanBlockObstacle(int rowNumber, int blockIndexInRow, 
 	if (NewBlock != nullptr)
 	{
 		NewBlock->OwningGrid = this;
+		NewBlock->location = Point(rowNumber, blockIndexInRow);
+	}
+	return NewBlock;
+}
+
+void  AEscapistBlockGrid::insertIntoBlockGrid(AEscapistBlock* block, int rowNumber)
+{
+	if (blockGrid.size() <= rowNumber)
+	{
+		std::vector<AEscapistBlock*> innerGrid(1, block);
+		blockGrid.push_back(innerGrid);
+	}
+	else
+	{
+		blockGrid[rowNumber].push_back(block);
 	}
 }
 
-void AEscapistBlockGrid::spwanPieceUser(int rowNumber, int blockIndexInRow, float zigzag) {
-	//set default spwan location (getActorLocation will add to x/y/z coords to center the blocks on the map.
-	const FVector PawnLocation = FVector(
-		((rowNumber * WorldMapConstants::BLOCK_SPACING_X) + zigzag),
-		(blockIndexInRow * WorldMapConstants::BLOCK_SPACING_Y), WorldMapConstants::BLOCK_PIECE_SPACING_Z) + GetActorLocation();
+AUser_Piece* AEscapistBlockGrid::spwanPieceUser(AEscapistBlock* block) {
+
+	FVector PawnLocation = FVector(0.0f, 0.0f, WorldMapConstants::BLOCK_PIECE_SPACING_Z) + block->GetActorLocation();
+
+	// Spawn pawn on location
+	AUser_Piece* Pawn = GetWorld()->SpawnActor<AUser_Piece>(PawnLocation, FRotator(0, 0, 0));
+
+	if (Pawn != nullptr) {
+		Pawn->OwningGrid = this;
+		Pawn->location = block->location;
+	}
+	return Pawn;
+}
+
+void AEscapistBlockGrid::insertAiPiece(APiece* aiPiece)
+{
+	aiPieces.push_back(aiPiece);
+}
+
+APiece* AEscapistBlockGrid::spwanPieceAi(AEscapistBlock* block) {
+
+	FVector PawnLocation = FVector(0.0f, 0.0f, WorldMapConstants::BLOCK_PIECE_SPACING_Z) + block->GetActorLocation();
+
 	// Spawn pawn on location
 	APiece* Pawn = GetWorld()->SpawnActor<APiece>(PawnLocation, FRotator(0, 0, 0));
 
 	if (Pawn != nullptr) {
 		Pawn->OwningGrid = this;
+		Pawn->location = block->location;
+		Pawn->setAiMaterial();
 	}
+	return Pawn;
 }
 
-MoveResult AEscapistBlockGrid::MovePiece(AEscapistBlock* block) {
+void AEscapistBlockGrid::insertUserPiece(AUser_Piece* userPiece)
+{
+	userPieces.push_back(userPiece);
+}
 
-	FVector pieceDestination = block->GetActorLocation() + FVector(-1500, 0, 200);
+void AEscapistBlockGrid::validateMovePiece(APiece* piece)
+{
+	moveValidation.SetValidMoves(piece, &blockGrid);
+	selectedUserPiece = piece;
+}
 
-//	UE_LOG(LogTemp, Warning, TEXT("Moving user to location: %s"), *pieceDestination.ToString());
-
-	userPiece->SetActorLocation(pieceDestination);
-
-//	UE_LOG(LogTemp, Warning, TEXT("User rootcomp location: %s"), *(RootComponent->GetComponentLocation().ToString()));
-
-	// TODO Need to calculate distance between block and user
-	float xDistanceToBlock = userPiece->GetActorLocation().X - block->GetActorLocation().X;
-	float yDistanceToBlock = userPiece->GetActorLocation().Y - block->GetActorLocation().Y;
-	int xCoord = xDistanceToBlock / 250;
-	int yCoord = yDistanceToBlock / 250;
-
-	AMove* x;
-	//AMove* y;
-
-	if (xCoord > 0) {
-		x = new AMove(Direction::Down, xCoord);
+MoveResult AEscapistBlockGrid::MovePiece(AEscapistBlock* destinationBlock) {
+	for (int inc = 0; inc < aiPieces.size(); inc++)
+	{
+		APiece* aiPiece = aiPieces[inc];
+		if (destinationBlock->location.getX() == aiPiece->location.getX() && destinationBlock->location.getY() == aiPiece->location.getY())
+		{
+			aiPieces.erase(aiPieces.begin() + inc);
+			aiPiece->GetWorld()->DestroyActor(aiPiece, true);
+		}
 	}
-	else if (xCoord < 0) {
-		x = new AMove(Direction::Down, xCoord);
+	
+	FVector PawnLocation = FVector(0.0f, 0.0f, WorldMapConstants::BLOCK_PIECE_SPACING_Z) + destinationBlock->GetActorLocation();
+	selectedUserPiece->SetActorLocation(PawnLocation);
+	selectedUserPiece->location = destinationBlock->location;
+	for (int dec = blockGrid.size()-1; dec >= 0; dec--)
+	{
+		vector<AEscapistBlock*> gridRow = blockGrid.at(dec);
+		for (int inc = 0; inc < gridRow.size(); inc++)
+		{
+			AEscapistBlock* block = gridRow.at(inc);
+			block->SetValidMove(false);
+		}
 	}
-	MoveResult moveResult = MoveResult::ValidMove;
-
-	return moveResult;
+	//just put it here for now!
+	return MoveResult::AiPieceTaken;
 };
-
-void AEscapistBlockGrid::SpawnActor(std::string character, int x, int y) {
-	// Make position vector, offset from Grid location
-	const FVector BlockLocation = FVector(x * WorldMapConstants::BLOCK_SPACING_X, y * WorldMapConstants::BLOCK_SPACING_Y, 0.f);// + GetActorLocation();
-	const FVector PawnLocation = FVector(y * WorldMapConstants::BLOCK_SPACING_X, x * WorldMapConstants::BLOCK_SPACING_Y, WorldMapConstants::BLOCK_PIECE_SPACING_Z);// + GetActorLocation();
-	AEscapistBlock* NewBlock = NULL;
-	APiece* Pawn = NULL;
-	if (character == "0") {
-		NewBlock = GetWorld()->SpawnActor<AObstacleBlock>(BlockLocation, FRotator(0, 0, 0));
-	}
-	// Spawn a block
-	else {
-		NewBlock = GetWorld()->SpawnActor<AEscapistBlock>(BlockLocation, FRotator(0, 0, 0));
-	}
-
-	if (character == "D") {
-		FActorSpawnParameters SpawnInfo;
-		SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		Pawn = GetWorld()->SpawnActor<APiece>(PawnLocation, FRotator(0, 0, 0));
-		Pawn->Init(x, y);
-		this->userPiece = Pawn;
-	}
-	// Tell the block about its owner
-	if (NewBlock != nullptr) {
-		NewBlock->OwningGrid = this;
-		NewBlock->Init(x, y);
-//		UE_LOG(LogTemp, Warning, TEXT("Spawning tile at expected location %s, Tile is at real location: %s"), *BlockLocation.ToString(), *NewBlock->GetActorLocation().ToString());
-
-	}
-
-	tiles.push_back(NewBlock);
-}
-
 
 void AEscapistBlockGrid::AddScore()
 {

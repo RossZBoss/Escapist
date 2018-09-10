@@ -11,8 +11,10 @@
 #include <iostream>
 #include "ObstacleBlock.h"
 #include "Piece.h"
+#include "User_Piece.h"
 #include "EscapistBlock.h"
-#include "Move.h"
+#include "Point.h"
+#include "MoveValidation.h"
 #include "MoveResult.h"
 #include "EscapistBlockGrid.generated.h"
 
@@ -31,6 +33,12 @@ class AEscapistBlockGrid : public AActor
 	class UTextRenderComponent* ScoreText;
 
 private:
+	MoveValidation moveValidation;
+
+	/** Returns DummyRoot subobject **/
+	FORCEINLINE class USceneComponent* GetDummyRoot() const { return DummyRoot; }
+	/** Returns ScoreText subobject **/
+	FORCEINLINE class UTextRenderComponent* GetScoreText() const { return ScoreText; }
 
 	//TODO look at getting rid of this or using it better.
 	void defaultSetupGivenByUnreal();
@@ -39,14 +47,21 @@ private:
 
 	void buildBoard(TArray<FString> gameMap);
 
-	void spwanBlockDefault(int rowNumber, int blockIndexInRow, float zigzag);
+	AEscapistBlock* spwanBlockDefault(int rowNumber, int blockIndexInRow, float zigzag);
 
-	void spwanBlockObstacle(int rowNumber, int blockIndexInRow, float zigzag);
+	AEscapistBlock* spwanBlockHill(int rowNumber, int blockIndexInRow, float zigzag);
 
-	void spwanPieceUser(int rowNumber, int blockIndexInRow, float zigzag);
+	AObstacleBlock* spwanBlockObstacle(int rowNumber, int blockIndexInRow, float zigzag);
 
-	//TODO this can be removed
-	void SpawnActor(std::string character, int x, int y);
+	void insertIntoBlockGrid(AEscapistBlock* block, int rowNumber);
+
+	AUser_Piece* spwanPieceUser(AEscapistBlock* block);
+
+	void insertUserPiece(AUser_Piece* userPiece);
+
+	APiece* spwanPieceAi(AEscapistBlock* block);
+
+	void insertAiPiece(APiece* userPiece);
 
 protected:
 	virtual void BeginPlay() override;
@@ -54,29 +69,23 @@ protected:
 public:
 	AEscapistBlockGrid();
 
+	std::vector<vector<AEscapistBlock*>> blockGrid;
+
+	std::vector<AUser_Piece*> userPieces;
+
+	APiece* selectedUserPiece;
+
+	std::vector<APiece*> aiPieces;
+
+	void validateMovePiece(APiece* piece);
+
+	MoveResult MovePiece(AEscapistBlock* destinationBlock);
+
 	/** How many blocks have been clicked */
 	int32 Score;
-	std::vector<std::vector<int>> GridArray;
-
-	/** Number of blocks along each side of grid */
-	UPROPERTY(Category=Grid, EditAnywhere, BlueprintReadOnly)
-	int32 Size;
-
-	std::list<AEscapistBlock*> tiles = *new std::list<AEscapistBlock*>();
-
-	APiece* userPiece;
 
 	/** Handle the block being clicked */
 	void AddScore();
-
-	MoveResult MovePiece(AEscapistBlock* block);
-
-	/** Returns DummyRoot subobject **/
-	FORCEINLINE class USceneComponent* GetDummyRoot() const { return DummyRoot; }
-	/** Returns ScoreText subobject **/
-	FORCEINLINE class UTextRenderComponent* GetScoreText() const { return ScoreText; }
-
-
 };
 
 

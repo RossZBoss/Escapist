@@ -15,9 +15,15 @@ protected:
 	int x, y; // coordinates of the point
 
 public:
+	Point();
 	Point(int, int);
 	int getX() const;
 	int getY() const;
+
+	Point add(Point p);
+
+	bool equals(Point p);
+
 	std::string toString();
 
 	~Point();
