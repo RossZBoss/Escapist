@@ -47,7 +47,8 @@ TArray<FString> AEscapistBlockGrid::getArrayFromFile() {
 	//this can be cleaned up later
 	FString result = "FileWasNotRead";
 	//put Z in name so its at bottom of IDE
-	FString filePath = "C:\\Users\\Ross\\Documents\\Unreal Projects\\Escapist\\Source\\Escapist\\Z_inputMap.txt";
+	FString filePath = FPaths::GameSourceDir().Append("Escapist/").Append("Z_inputMap.txt");
+	UE_LOG(LogTemp, Warning, TEXT("TestLevel path is: %s"), *filePath);
 
 	FFileHelper::LoadFileToString(result, *filePath);
 	//TODO: Note that right now the file must have 0 whitespace for this splitting to work, find a way to remove all whitespaces before splitting.
